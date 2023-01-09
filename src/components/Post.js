@@ -3,26 +3,32 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { EditData, GetData, AddData } from "../store";
 import { useLocation } from "react-router-dom";
+import { isElement } from "react-dom/test-utils";
 
 const Post = () => {
   const location = useLocation();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [email, setEmail] = useState("");
+  const [photo, setPhoto] = useState("");
+
   const [id, setId] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const dispatch = useDispatch();
 
   const onUpdate = async () => {
     try {
-      let payload = {
-        id: location.state._id,
-        name: name,
-        age: age,
-        email: email,
-      };
-      // console.log(payload.id);
+      let payload = new FormData();
+      payload.set("name", name);
+      payload.set("age", age);
+      payload.set("email", email);
+      payload.set("_id", id);
+
+      payload.set("myfile", photo);
+      // console.log("photo", payload.get("name"));
+
       dispatch(EditData(payload));
+      // dispatch(GetData());
       // console.log(payload.id, payload.name, payload.age, payload.email);
       if (payload.name && payload.age !== undefined) {
         setName("");
@@ -36,31 +42,35 @@ const Post = () => {
   };
   const Submit = async () => {
     try {
-      let payload = {
-        name: name,
-        age: age,
-        email: email,
-      };
-      console.log(payload);
-      dispatch(AddData(payload));
-      if (payload.name && payload.age !== undefined) {
-        setName("");
-        setAge("");
-        setEmail("");
+      let payload = new FormData();
+      payload.append("name", name);
+      payload.append("age", age);
+      payload.append("email", email);
+      payload.append("myfile", photo);
+
+      for (const pair of payload.entries()) {
+        console.log(`${pair[0]}, ${pair[1]}`);
       }
+      dispatch(AddData(payload));
+      // if (payload.name && payload.age !== undefined) {
+      //   setName("");
+      //   setAge("");
+      //   setEmail("");
+      // }
     } catch (e) {
       console.log(e);
     }
   };
   useEffect(() => {
     if (location.state) {
-      const { id, name, age, email } = location.state;
+      const { _id, name, age, email, photo } = location.state;
+      console.log(_id);
       setName(name);
       setAge(age);
-      setId(id);
+      setId(_id);
       setEmail(email);
       setIsEdit(true);
-      return;
+      setPhoto(photo);
     }
   }, []);
 
@@ -113,6 +123,21 @@ const Post = () => {
                 setEmail(e.target.value);
               }}
             ></input>
+          </div>
+          <div class="col-sm mt-4">
+            {/* <form
+              action="/uploadphoto"
+              enctype="multipart/form-data"
+              method="POST"
+            > */}
+            <input
+              type="file"
+              name="myImage"
+              onChange={(e) => {
+                setPhoto(e.target.files[0]);
+              }}
+            />
+            {/* </form> */}
           </div>
           <div class="col-sm mt-4">
             {isEdit && (

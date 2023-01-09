@@ -11,23 +11,31 @@ const actionSlice = createSlice({
     add(state, action) {
       const { payload } = action;
       state.data.push(payload);
+      console.log(action.payload);
     },
     getdata(state, action) {
       if (!state.data[0]) state.data = [...action.payload];
     },
     editdata(state, action) {
-      const { id, name, age, email } = action.payload;
-      // console.log(action.payload.id);
-      state.data = state.data.map((el) => {
-        if (el._id == id)
-          return { _id: el._id, name: name, age: age, email: email };
-        return el;
-      });
+      // const { _id, name, age, email, myfile } = action.payload;
+      // console.log(action.payload);
+      // state.data = state.data.map((el) => {
+      //   if (el._id == _id)
+      //     return {
+      //       _id: el._id,
+      //       name: name,
+      //       age: age,
+      //       email: email,
+      //       myfile: myfile,
+      //     };
+      //   return el;
+      // });
+      // state.data = [...state.data];
     },
     deldata(state, action) {
       const { id } = action.payload;
       state.data = state.data.filter((el) => el._id !== id);
-      console.log(action.payload.id);
+      // console.log(action.payload.id);
     },
   },
 });
@@ -43,33 +51,43 @@ export const GetData = () => async (dispatch) => {
   }
 };
 
-export const AddData = (payload) => async (dispatch) => {
+export const AddData = (formData) => async (dispatch) => {
   try {
-    console.log(payload.email);
-    const res = await axios.post("http://localhost:8000/api/create", {
-      email: payload.email,
-      age: payload.age,
-      name: payload.name,
+    console.log(formData);
+    const res = await axios.post("http://localhost:8000/api/create", formData, {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
     });
-    console.log(res);
+    console.log(formData);
     await dispatch(add(res.data));
   } catch (error) {
     return console.error(error);
   }
 };
-export const EditData = (payload) => async (dispatch) => {
+export const EditData = (formData) => async (dispatch) => {
+  console.log(formData.get("myfile"));
+  for (const pair of formData.entries()) {
+    console.log(`${pair[0]}, ${pair[1]}`);
+  }
   try {
     const res = await axios.put(
-      `http://localhost:8000/api/update/${payload.id}`,
+      `http://localhost:8000/api/update/${formData.get("_id")}`,
+      formData,
       {
-        _id: payload.id,
-        email: payload.email,
-        age: payload.age,
-        name: payload.name,
+        headers: {
+          "content-type": "multipart/form-data",
+        },
       }
     );
-    // console.log(res.originalurl);
-    await dispatch(editdata(payload));
+    var object = {};
+    formData.forEach(function (value, key) {
+      object[key] = value;
+    });
+    // // var json = JSON.stringify(object);
+    // console.log(object);
+
+    await dispatch(getdata(object));
   } catch (error) {
     return console.error(error);
   }
@@ -77,9 +95,14 @@ export const EditData = (payload) => async (dispatch) => {
 
 export const DelData = (payload) => async (dispatch) => {
   try {
-    const res = await axios.delete(
-      `http://localhost:8000/api//delete/${payload.id}`
-    );
+    const res = await axios.post(`http://localhost:8000/api/delete`, {
+      _id: payload.id,
+      imageUrl: payload.imageUrl,
+    });
+    // const res = await axios.delete(
+    //   `http://localhost:8000/api//delete/${payload.id}`
+    // );
+    // console.log("IMAGE_URL", payload.imageUrl);
     await dispatch(deldata(payload));
   } catch (error) {
     return console.error(error);

@@ -5,18 +5,20 @@ import { Button, Table } from "reactstrap";
 import { useState } from "react";
 import { GetData, DelData } from "../store";
 import { useNavigate } from "react-router-dom";
+import Photo from "./Photo";
 
 const Get = () => {
+  const [triggerReRender, SetTriggerReRender] = useState(false);
   const { data } = useSelector((state) => {
     return state;
   });
-
   const navigate = useNavigate();
 
   const onEdit = (el) => {
     try {
       // dispatch(EditStudentAction(payload));
       navigate("/Post", { state: el });
+      console.log(el);
       // Isclick(true);
     } catch (e) {
       console.log(e);
@@ -26,6 +28,7 @@ const Get = () => {
     try {
       let payload = {
         id: el._id,
+        imageUrl: el.imageUrl,
       };
       dispatch(DelData(payload));
     } catch (e) {
@@ -34,14 +37,29 @@ const Get = () => {
   };
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(GetData());
-  }, []);
+    (async () => {
+      await dispatch(GetData());
+      SetTriggerReRender(true);
+      // console.log(data);
+      console.log(
+        data.map((_) => {
+          return _.photo;
+        })
+      );
+    })();
+  });
+  // useEffect(() => {
+  //   dispatch(GetData());
+  //   console.log("trigger ", triggerReRender);
+  // }, [triggerReRender]);
+
   return (
     <div>
       <Table>
         <thead>
           <tr>
             <th>Index</th>
+            <th>Images</th>
             <th>userId</th>
             <th>Name</th>
             <th>Age</th>
@@ -56,6 +74,9 @@ const Get = () => {
               <tbody key={indx}>
                 <tr>
                   <td>{indx + 1}</td>
+                  <td>
+                    <Photo user={el.imageUrl} />
+                  </td>
                   <td>{el._id}</td>
                   <td>{el.name}</td>
                   <td>{el.age}</td>
